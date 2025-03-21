@@ -17,7 +17,7 @@ async function fetchAnimeDetails() {
 
     const query = `
     query ($id: Int) {
-      Media(id: 163134, type: ANIME) {
+      Media(id: $id, type: ANIME) {
         id
         title { romaji english native }
         coverImage { large }
