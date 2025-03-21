@@ -1,16 +1,19 @@
 // Function to get anime ID from URL
 function getAnimeId() {
     const params = new URLSearchParams(window.location.search);
-    return params.get("id");
+    return params.get("id"); // Ensure URL has ?id=ANIME_ID
 }
 
 // Function to fetch anime details
 async function fetchAnimeDetails() {
     const animeId = getAnimeId();
     if (!animeId) {
+        console.error("Anime ID not found in URL.");
         document.getElementById("anime-title").textContent = "Anime Not Found!";
         return;
     }
+
+    console.log(`Fetching details for Anime ID: ${animeId}`);
 
     const query = `
     query ($id: Int) {
@@ -47,12 +50,16 @@ async function fetchAnimeDetails() {
             body: JSON.stringify({ query, variables: { id: parseInt(animeId) } }),
         });
 
-        const { data } = await response.json();
-        if (!data.Media) {
-            document.getElementById("anime-title").textContent = "Anime Not Found!";
-            return;
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
         }
 
+        const { data } = await response.json();
+        if (!data || !data.Media) {
+            throw new Error("No data found for this anime.");
+        }
+
+        console.log("Anime data received:", data.Media);
         displayAnimeDetails(data.Media);
     } catch (error) {
         console.error("Error fetching anime details:", error);
@@ -62,14 +69,13 @@ async function fetchAnimeDetails() {
 
 // Function to display anime details
 function displayAnimeDetails(anime) {
-    // Set banner image
-    document.getElementById("anime-banner").style.backgroundImage = `url('${anime.bannerImage || "/default-banner.jpg"}')`;
+    document.getElementById("anime-banner").style.backgroundImage = anime.bannerImage
+        ? `url('${anime.bannerImage}')`
+        : "none";
     
-    // Set cover image and title
     document.getElementById("anime-cover").src = anime.coverImage.large || "/default-cover.jpg";
     document.getElementById("anime-title").textContent = anime.title.english || anime.title.romaji || anime.title.native;
 
-    // Metadata section
     document.getElementById("anime-airing").textContent = anime.nextAiringEpisode
         ? `Ep ${anime.nextAiringEpisode.episode} in ${Math.floor(anime.nextAiringEpisode.timeUntilAiring / 86400)} days`
         : "Completed";
@@ -90,10 +96,8 @@ function displayAnimeDetails(anime) {
     document.getElementById("anime-native").textContent = anime.title.native || "Unknown";
     document.getElementById("anime-synonyms").textContent = anime.synonyms.length > 0 ? anime.synonyms.join(", ") : "None";
 
-    // Description
     document.getElementById("anime-description").innerHTML = anime.description || "No description available.";
 
-    // Characters
     const charactersContainer = document.getElementById("anime-characters");
     charactersContainer.innerHTML = "";
     anime.characters.edges.forEach(character => {
@@ -106,7 +110,6 @@ function displayAnimeDetails(anime) {
         charactersContainer.appendChild(charCard);
     });
 
-    // Trailer
     const trailerContainer = document.getElementById("anime-trailer");
     trailerContainer.innerHTML = "";
     if (anime.trailer && anime.trailer.site === "youtube") {
