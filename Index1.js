@@ -76,7 +76,7 @@ function displayAnime(animeList, sectionClass) {
         const animeCard = document.createElement("div");
         animeCard.className = "anime-card";
         animeCard.innerHTML = `
-            <a href="https://anilist.co/anime/${anime.id}" target="_blank">
+            <a href="/p/anime.html?id=${anime.id}">
                 <img src="${anime.coverImage.large}" alt="${anime.title.romaji}">
                 <p>${anime.title.romaji}</p>
             </a>
