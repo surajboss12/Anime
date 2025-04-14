@@ -25,23 +25,27 @@ async function fetchVideos() {
     console.log("API response received:");
     console.log(result);  // Log the full API response to inspect
 
-    if (!result.data) {
-      console.error('No "data" field found in the response.');
+    // Check if "data" exists and is an object
+    if (!result.data || typeof result.data !== 'object') {
+      console.error('"data" is not an object, it is:', typeof result.data);
       videoFeed.innerHTML = "<p class='loading'>No videos found or invalid response.</p>";
       return;
     }
 
-    if (!Array.isArray(result.data)) {
-      console.error('"data" is not an array, it is:', typeof result.data);
-      videoFeed.innerHTML = "<p class='loading'>No videos found or invalid response format.</p>";
+    console.log('Data object received:', result.data);
+
+    // Check if there's a property containing videos (e.g., result.data.videos)
+    const videos = result.data.videos || [];
+    console.log(`Found ${videos.length} videos.`);
+
+    if (videos.length === 0) {
+      videoFeed.innerHTML = "<p class='loading'>No videos found in the data.</p>";
       return;
     }
 
-    console.log(`Received ${result.data.length} videos.`);
-
     videoFeed.innerHTML = ""; // Clear previous content
 
-    result.data.forEach((video, index) => {
+    videos.forEach((video, index) => {
       console.log(`Processing video ${index + 1}:`);
       console.log(video);
 
