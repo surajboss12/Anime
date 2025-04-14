@@ -1,18 +1,24 @@
 const videoFeed = document.getElementById("videoFeed");
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
+
 const randomKeywords = [
   "funny", "dance", "cat", "dog", "viral", "life", "music", "food", "art", "gaming"
 ];
+
 let isLoading = false;
+let currentKeyword = getRandomKeyword();
 
 function getRandomKeyword() {
   const index = Math.floor(Math.random() * randomKeywords.length);
   return randomKeywords[index];
 }
 
-async function fetchVideos() {
+async function fetchVideos(isSearch = false) {
   if (isLoading) return;
   isLoading = true;
-  const keyword = getRandomKeyword();
+
+  const keyword = currentKeyword;
   console.log(`Fetching videos for keyword: ${keyword}`);
 
   try {
@@ -23,6 +29,10 @@ async function fetchVideos() {
     if (!Array.isArray(videos)) {
       console.error("Invalid video data:", result.data);
       return;
+    }
+
+    if (isSearch) {
+      videoFeed.innerHTML = ""; // Clear feed on new search
     }
 
     videos.forEach(video => {
@@ -83,10 +93,32 @@ function observeVideos() {
   wrappers.forEach(wrapper => observer.observe(wrapper));
 }
 
-// Infinite scroll when reaching near the bottom
-window.addEventListener("scroll", () => {
-  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-    fetchVideos();
+// Infinite scroll observer
+const scrollObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      console.log("Bottom reached — loading more videos...");
+      fetchVideos();
+    }
+  });
+}, {
+  root: null,
+  rootMargin: "100px",
+  threshold: 0,
+});
+
+// Add a sentinel div at bottom for infinite scroll detection
+const sentinel = document.createElement("div");
+sentinel.id = "scroll-sentinel";
+document.body.appendChild(sentinel);
+scrollObserver.observe(sentinel);
+
+// Search button handler
+searchBtn.addEventListener("click", () => {
+  const keyword = searchInput.value.trim();
+  if (keyword) {
+    currentKeyword = keyword;
+    fetchVideos(true); // true = this is a fresh search
   }
 });
 
