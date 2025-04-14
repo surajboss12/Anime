@@ -1,6 +1,5 @@
 const videoFeed = document.getElementById("videoFeed");
 const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
 
 const randomKeywords = [
   "funny", "dance", "cat", "dog", "viral", "life", "music", "food", "art", "gaming"
@@ -14,15 +13,20 @@ function getRandomKeyword() {
   return randomKeywords[index];
 }
 
+function getSearchKeyword() {
+  const input = searchInput.value.trim();
+  return input !== "" ? input : getRandomKeyword();
+}
+
 async function fetchVideos(isSearch = false) {
   if (isLoading) return;
   isLoading = true;
 
-  const keyword = currentKeyword;
-  console.log(`Fetching videos for keyword: ${keyword}`);
+  currentKeyword = getSearchKeyword();
+  console.log(`Fetching videos for keyword: ${currentKeyword}`);
 
   try {
-    const response = await fetch(`https://www.tikwm.com/api/feed/search?keywords=${encodeURIComponent(keyword)}`);
+    const response = await fetch(`https://www.tikwm.com/api/feed/search?keywords=${encodeURIComponent(currentKeyword)}`);
     const result = await response.json();
     const videos = result.data.videos || [];
 
@@ -32,7 +36,7 @@ async function fetchVideos(isSearch = false) {
     }
 
     if (isSearch) {
-      videoFeed.innerHTML = ""; // Clear feed on new search
+      videoFeed.innerHTML = ""; // Clear on new search
     }
 
     videos.forEach(video => {
@@ -62,7 +66,7 @@ async function fetchVideos(isSearch = false) {
       videoFeed.appendChild(wrapper);
     });
 
-    observeVideos(); // Refresh observers
+    observeVideos();
   } catch (err) {
     console.error("Fetch error:", err);
   } finally {
@@ -93,7 +97,7 @@ function observeVideos() {
   wrappers.forEach(wrapper => observer.observe(wrapper));
 }
 
-// Infinite scroll observer
+// Infinite scroll
 const scrollObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -107,17 +111,14 @@ const scrollObserver = new IntersectionObserver((entries) => {
   threshold: 0,
 });
 
-// Add a sentinel div at bottom for infinite scroll detection
 const sentinel = document.createElement("div");
 sentinel.id = "scroll-sentinel";
 document.body.appendChild(sentinel);
 scrollObserver.observe(sentinel);
 
-// Search button handler
-searchBtn.addEventListener("click", () => {
-  const keyword = searchInput.value.trim();
-  if (keyword) {
-    currentKeyword = keyword;
+// Listen for Enter key on the search input
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
     fetchVideos(true); // true = this is a fresh search
   }
 });
