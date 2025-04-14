@@ -18,8 +18,10 @@ async function fetchVideos() {
     const response = await fetch(url);
     const result = await response.json();
 
-    if (!result.data || result.data.length === 0) {
-      videoFeed.innerHTML = "<p class='loading'>No videos found.</p>";
+    console.log("API response:", result);
+
+    if (!result.data || !Array.isArray(result.data)) {
+      videoFeed.innerHTML = "<p class='loading'>No videos found or invalid response.</p>";
       return;
     }
 
@@ -50,7 +52,7 @@ async function fetchVideos() {
     });
   } catch (err) {
     videoFeed.innerHTML = `<p class='loading'>Error loading videos. Try again later.</p>`;
-    console.error(err);
+    console.error("Fetch error:", err);
   }
 }
 
